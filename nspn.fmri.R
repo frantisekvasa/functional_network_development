@@ -576,8 +576,8 @@ mi.pspin.fdr = p.adjust(mi.pspin, method = 'fdr') # correct p-values for multipl
 
 # map maturational index to colorbar
 colBar = colorRampPalette(c('blue','white','red'))(100)
-col.l = -0.8; col.u = 0.8                           # lower and upper colorbar limits (might require adjustment, based on range(mi.rho))
-temp = ceiling(100*((mi.rho-col.l)/(col.u-col.l)));
+mi.col.l = -0.8; mi.col.u = 0.8                           # lower and upper colorbar limits (might require adjustment, based on range(mi.rho))
+temp = ceiling(100*((mi.rho-mi.col.l)/(mi.col.u-mi.col.l)));
 col.slt_14 = matrix(colBar[temp])
 
 # positive
@@ -616,19 +616,19 @@ write.fMRI.subset(mi.rho[hcp.346.cort][which(mi.pspin.fdr[hcp.346.cort]<0.05)], 
 # all
 pdf(paste(plot.path,'/mat_index_subc.pdf',sep=''),width=5,height=3)
 par(mar=c(3, 5, 1, 2) + 0.1, cex.lab = 2, cex.axis = 1.3, cex.main = 2, font.main = 1, bg='white')
-subc.plot(mi.rho[hcp.346.subc],subc.ord,nm.subc,colBar = colorRampPalette(c('blue','white','red'))(100),col.l = -0.8,col.u = 0.8)
+subc.plot(mi.rho[hcp.346.subc],subc.ord,nm.subc,colBar = colorRampPalette(c('blue','white','red'))(100),col.l = mi.col.l,col.u = mi.col.u)
 legend('bottomright',title='hemis.',legend=c('left','right'),col='grey60',text.col='grey30',pch=c(60,62),cex=1.2,pt.cex=1.35,bty='n')
 dev.off()
 # P < 0.05
 pdf(paste(plot.path,'/mat_index_subc_p_fdr.pdf',sep=''),width=5,height=3)
 par(mar=c(3, 5, 1, 2) + 0.1, cex.lab = 2, cex.axis = 1.3, cex.main = 2, font.main = 1, bg='white')
-subc.plot.sig(mi.rho[hcp.346.subc],mi.p.fdr[hcp.346.subc],0.05,subc.ord,nm.subc,colBar = colorRampPalette(c('blue','white','red'))(100),col.l = -0.8,col.u = 0.8)
+subc.plot.sig(mi.rho[hcp.346.subc],mi.p.fdr[hcp.346.subc],0.05,subc.ord,nm.subc,colBar = colorRampPalette(c('blue','white','red'))(100),col.l = mi.col.l,col.u = mi.col.u)
 legend('bottomright',title='hemis.',legend=c('left','right'),col='grey60',text.col='grey30',pch=c(60,62),cex=1.2,pt.cex=1.35,bty='n')
 dev.off()
 # P_spin < 0.05
 pdf(paste(plot.path,'/mat_index_subc_pspin_fdr.pdf',sep=''),width=5,height=3)
 par(mar=c(3, 5, 1, 2) + 0.1, cex.lab = 2, cex.axis = 1.3, cex.main = 2, font.main = 1, bg='white')
-subc.plot.sig(mi.rho[hcp.346.subc],mi.pspin.fdr[hcp.346.subc],0.05,subc.ord,nm.subc,colBar = colorRampPalette(c('blue','white','red'))(100),col.l = -0.8,col.u = 0.8)
+subc.plot.sig(mi.rho[hcp.346.subc],mi.pspin.fdr[hcp.346.subc],0.05,subc.ord,nm.subc,colBar = colorRampPalette(c('blue','white','red'))(100),col.l = mi.col.l,col.u = mi.col.u)
 legend('bottomright',title='hemis.',legend=c('left','right'),col='grey60',text.col='grey30',pch=c(60,62),cex=1.2,pt.cex=1.35,bty='n')
 dev.off()
 
