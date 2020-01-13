@@ -48,7 +48,7 @@ source(paste(code.path,'/dependencies/subc.plot.R',sep=''))         # subcortica
 # fc            functional connectivity matrices [N(ROI) x N(ROI) x N(subj)]
 # fd            average frame-wise displacement (in "main" data, this was regressed from FC, edge-wise)
 # id            participant ID's
-# sex          participant sex (male / female)
+# sex           participant sex (male / female)
 # site          scanner site
 
 ### (II) General
