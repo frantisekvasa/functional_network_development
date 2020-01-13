@@ -44,11 +44,11 @@ source(paste(code.path,'/dependencies/subc.plot.R',sep=''))         # subcortica
 #   (iii) nspn.fmri.gsr.RData
 
 ## Values
-# age           subject ages
+# age           participant ages
 # fc            functional connectivity matrices [N(ROI) x N(ROI) x N(subj)]
 # fd            average frame-wise displacement (in "main" data, this was regressed from FC, edge-wise)
-# id            subject ID's
-# male          sex (male / female)
+# id            participant ID's
+# sex          participant sex (male / female)
 # site          scanner site
 
 ### (II) General
@@ -89,26 +89,26 @@ if (data.stream=='main') { # main data stream
   age = age.main
   fc = fc.main
   id = id.main
-  male = male.main
+  sex = sex.main
   site = site.main
   fd = fd.main
-  rm(age.main,fc.main,id.main,male.main,site.main,fd.main)
+  rm(age.main,fc.main,id.main,sex.main,site.main,fd.main)
 } else if (data.stream=='lowmot') { # low-motion data stream
   age = age.lowmot
   fc = fc.lowmot
   id = id.lowmot
-  male = male.lowmot
+  sex = sex.lowmot
   site = site.lowmot
   fd = fd.lowmot
-  rm(age.lowmot,fc.lowmot,id.lowmot,male.lowmot,site.lowmot,fd.lowmot)
+  rm(age.lowmot,fc.lowmot,id.lowmot,sex.lowmot,site.lowmot,fd.lowmot)
 } else if (data.stream=='gsr') { # gsr data stream
   age = age.gsr
   fc = fc.gsr
   id = id.gsr
-  male = male.gsr
+  sex = sex.gsr
   site = site.gsr
   fd = fd.gsr
-  rm(age.gsr,fc.gsr,id.gsr,male.gsr,site.gsr,fd.gsr)
+  rm(age.gsr,fc.gsr,id.gsr,sex.gsr,site.gsr,fd.gsr)
 }
 
 # define path for plot output (and create necessary folders)
@@ -152,7 +152,7 @@ yeo.id.subc.keep = yeo.id.subc[hcp.keep.id]   # yeo ID's
 nyeo = max(yeo.id.subc.keep)                  # number of yeo networks
 col.yeo = c('darkmagenta','cadetblue','forestgreen','hotpink2','cornsilk1','orange','salmon','grey25') # yeo colors
 
-ns = length(age)                                        # number of subjects                          
+ns = length(age)                                        # number of participants                         
 triup = upper.tri(matrix(nrow=nroi,ncol=nroi))          # indices for upper triangular part of matrix
 age.pred = seq(from=min(age),to=max(age),length.out=ns) # predicted age (for plotting of linear models)
 
@@ -189,8 +189,8 @@ for (n in 1:ns) {
 
 ## head motion QC
 
-# mean subject motion (mean FD) as a function of age (main = Fig. S2A)
-df = data.frame(x1 = age, x2 = male, x3 = site, y = fd, id = id)
+# mean participant motion (mean FD) as a function of age (main = Fig. S2A)
+df = data.frame(x1 = age, x2 = sex, x3 = site, y = fd, id = id)
 l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)
 newdat = expand.grid(x3 = 'wbic', x2='male',x1=range(age))
 pred.m = predictSE.lme(l, newdata=expand.grid(x3='wbic',x2='male',x1=range(age)), se.fit=T, level=0)
@@ -207,13 +207,15 @@ ggplot(df, aes(x=x1, y=y)) + #, colour=x2
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) #, axis.line = element_line(colour = "black")
 dev.off()
 
-# mean FC as a function of mean subject motion (mean FD) (main = Fig. S2F)
-# (! uncorrected imperfection spotted during consolidation of code: in "main" stream, to exactly reproduce statistics in Fig. S2F, remove "x3='wbic'" from lines 214-216 below)
-df = data.frame(x1 = fd, x2 = male, x3 = site, y = fc.m, id = id)
-l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)
-newdat = expand.grid(x3='wbic',x2='male',x1=range(fd))
-pred.m = predictSE.lme(l, newdata=expand.grid(x3='wbic',x2='male',x1=range(fd)), se.fit=T, level=0)
-pred.f = predictSE.lme(l, newdata=expand.grid(x3='wbic',x2='female',x1=range(fd)), se.fit=T, level=0)
+# mean FC as a function of mean participant motion (mean FD) (main = Fig. S2F)
+# other relevant statistics can be obtained using:
+# t_fd (fd = "x1"): summary(l)$tTable[2,4]
+# p_fd (fd = "x1"): summary(l)$tTable[2,5]
+df = data.frame(x1 = fd, x2 = sex, y = fc.m, id = id)
+l = lme(y ~ x1 + x2, random = ~ 1|id, data = df)
+newdat = expand.grid(x2='male',x1=range(fd))
+pred.m = predictSE.lme(l, newdata=expand.grid(x2='male',x1=range(fd)), se.fit=T, level=0)
+pred.f = predictSE.lme(l, newdata=expand.grid(x2='female',x1=range(fd)), se.fit=T, level=0)
 pred = list();pred$fit = (pred.m$fit+pred.f$fit)/2; pred$se.fit = (pred.m$se.fit+pred.f$se.fit)/2;
 pdf(paste(plot.path,'/head_motion_vs_mean_fc_lme.pdf',sep=''),width=6,height=5)
 ggplot(df, aes(x=x1, y=y)) + #, colour=x2
@@ -232,7 +234,7 @@ dev.off()
 # p_age (age = "x1"): summary(l)$tTable[2,5]
 
 # mean
-df = data.frame(x1 = age, x2 = male, x3 = site, y = fc.m, id = id)
+df = data.frame(x1 = age, x2 = sex, x3 = site, y = fc.m, id = id)
 l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)
 newdat = expand.grid(x3='wbic',x2='male',x1=range(age))
 pred.m = predictSE.lme(l, newdata=expand.grid(x3='wbic',x2='male',x1=range(age)), se.fit=T, level=0)
@@ -250,7 +252,7 @@ ggplot(df, aes(x=x1, y=y)) +
 dev.off()
 
 # variance
-df = data.frame(x1 = age, x2 = male, x3 = site, y = fc.var, id = id)
+df = data.frame(x1 = age, x2 = sex, x3 = site, y = fc.var, id = id)
 l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)
 newdat = expand.grid(x2='male',x1=range(age))
 pred.m = predictSE.lme(l, newdata=expand.grid(x3='wbic', x2='male',x1=range(age)), se.fit=T, level=0)
@@ -268,7 +270,7 @@ ggplot(df, aes(x=x1, y=y)) +
 dev.off()
 
 # skewness
-df = data.frame(x1 = age, x2 = male, x3 = site, y = fc.skew, id = id)
+df = data.frame(x1 = age, x2 = sex, x3 = site, y = fc.skew, id = id)
 l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)
 newdat = expand.grid(x3='wbic',x2='male',x1=range(age))
 pred.m = predictSE.lme(l, newdata=expand.grid(x3='wbic',x2='male',x1=range(age)), se.fit=T, level=0)
@@ -286,7 +288,7 @@ ggplot(df, aes(x=x1, y=y)) +
 dev.off()
 
 # kurtosis
-df = data.frame(x1 = age, x2 = male, x3 = site, y = fc.kurt, id = id)
+df = data.frame(x1 = age, x2 = sex, x3 = site, y = fc.kurt, id = id)
 l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)
 newdat = expand.grid(x3='wbic',x2='male',x1=range(age))
 pred.m = predictSE.lme(l, newdata=expand.grid(x3='wbic',x2='male',x1=range(age)), se.fit=T, level=0)
@@ -316,7 +318,7 @@ fc.prct.int = fc.prct.age = vector(length=nprct) # initialise variables
 for (i in 1:nprct) {
   if (i%%10 == 0) print(paste('percentile ',toString(i),' of ',toString(nprct),sep='')) # track progress
   
-  df = data.frame(x1 = age, x2 = male, x3 = site, y = fc.prct[i,], id = id) # data frame for linear mixed-effects model (lme)
+  df = data.frame(x1 = age, x2 = sex, x3 = site, y = fc.prct[i,], id = id) # data frame for linear mixed-effects model (lme)
   l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df) # lme fitting
   fc.prct.int[i] = l$coefficients$fixed[1]            # intercept
   fc.prct.age[i] = l$coefficients$fixed[2]            # beta coefficient for effect of age
@@ -371,7 +373,7 @@ for (n in 1:nroi) {
   tryCatch(
     expr = {
       # fit lme
-      df = data.frame(x1 = age, x2 = male, x3 = site, y = str.cort[n,], id = id)  # data frame for lme
+      df = data.frame(x1 = age, x2 = sex, x3 = site, y = str.cort[n,], id = id)  # data frame for lme
       l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)                       # fit lme
       str.cort.age.t[n] = summary(l)$tTable[2,4]                                  # t-statistic for effect of age (dFC_14-26)
       str.cort.age.p[n] = summary(l)$tTable[2,5]                                  # p-value for effect of age
@@ -387,7 +389,7 @@ for (n in 1:nroi) {
   tryCatch(
     expr = {
       # fit lme
-      df = data.frame(x1 = age, x2 = male , x3 = site, y = str.subc[n,], id = id) # data frame for lme
+      df = data.frame(x1 = age, x2 = sex , x3 = site, y = str.subc[n,], id = id) # data frame for lme
       l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)                       # fit lme
       str.subc.age.t[n] = summary(l)$tTable[2,4]                                  # t-statistic for effect of age (dFC_14-26)
       str.subc.age.p[n] = summary(l)$tTable[2,5]                                  # p-value for effect of age
@@ -423,7 +425,7 @@ for (n in 1:nroi) {
     tryCatch(
       expr = {
         # fit lme
-        df = data.frame(x1 = age, x2 = male, x3 = site, y = str.indsubc[n,,i], id = id)   # data frame for lme
+        df = data.frame(x1 = age, x2 = sex, x3 = site, y = str.indsubc[n,,i], id = id)   # data frame for lme
         l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)                             # fit lme
         str.indsubc.age.t[n,i] = summary(l)$tTable[2,4]                                   # t-statistic for effect of age (dFC_14-26)
         str.indsubc.age.p[n,i] = summary(l)$tTable[2,5]                                   # p-value for effect of age
@@ -525,7 +527,7 @@ for (i in 1:(nroi-1)) {     # only loop over upper triangular (as matrices are s
     tryCatch(
       expr = {
         # fit lme
-        df = data.frame(x1 = age, x2 = male, x3 = site, y = fc[i,j,], id = id)  # data frame for model fitting
+        df = data.frame(x1 = age, x2 = sex, x3 = site, y = fc[i,j,], id = id)  # data frame for model fitting
         l = lme(y ~ x1 + x2 + x3, random = ~ 1|id, data = df)                   # fit model
         fc.age.t[i,j] = summary(l)$tTable[2,4]                                  # t-statistic of effect of age
         fc.age.p[i,j] = summary(l)$tTable[2,5]                                  # p-value of effect of age
@@ -576,7 +578,7 @@ mi.pspin.fdr = p.adjust(mi.pspin, method = 'fdr') # correct p-values for multipl
 
 # map maturational index to colorbar
 colBar = colorRampPalette(c('blue','white','red'))(100)
-mi.col.l = -0.8; mi.col.u = 0.8                           # lower and upper colorbar limits (might require adjustment, based on range(mi.rho))
+mi.col.l = -0.75; mi.col.u = 0.75                           # lower and upper colorbar limits (might require adjustment, based on range(mi.rho))
 temp = ceiling(100*((mi.rho-mi.col.l)/(mi.col.u-mi.col.l)));
 col.slt_14 = matrix(colBar[temp])
 
@@ -612,7 +614,6 @@ write.fMRI.subset(mi.rho[hcp.346.cort][which(mi.p.fdr[hcp.346.cort]<0.05)], hcp.
 write.fMRI.subset(mi.rho[hcp.346.cort][which(mi.pspin.fdr[hcp.346.cort]<0.05)], hcp.360.keep[which(mi.pspin.fdr[hcp.346.cort]<0.05)], nroi.cort.tot, paste(plot.path,'/surf_txt/mat_index_pspin_fdr.txt',sep=''))
 
 # plots of individual subcortical regions (main = Fig. 2D, and Fig. S5)
-# (! uncorrected imperfection spotted during consolidation of code: in "gsr" stream, subcortical regions in Fig. S31D are ordered according to their default order (different from analogous figures from other analysis streams))
 # all
 pdf(paste(plot.path,'/mat_index_subc.pdf',sep=''),width=5,height=3)
 par(mar=c(3, 5, 1, 2) + 0.1, cex.lab = 2, cex.axis = 1.3, cex.main = 2, font.main = 1, bg='white')
@@ -732,7 +733,7 @@ dev.off()
      ### structural development (from NSPN data; Whitaker*, Vértes* et al. PNAS 113(32), 2016 and Váša et al. Cereb. Cortex 28, 2018)
 # 1) dCT              age-related changes (d) in cortical thickness (CT)
 # 2) dMT_70           age-related changes (d) in magnetization transfer (MT) at 70% fractional depth into cortex (70)
-# 3) dSC_CT           age-related changes (d) in node strength of structural covariance (SC) of CT across subjects
+# 3) dSC_CT           age-related changes (d) in node strength of structural covariance (SC) of CT across participants
      ### PET measures (Vaishnavi et al PNAS 107(41) 2010)
 # 4) glyc_ind         glycolytic index (measure of aerobic glycolysis)
 # 5) CMRO2            metabolic rate of oxygen
@@ -784,34 +785,32 @@ p.cort.map.fdr = p.adjust(p.cort.map, method = 'fdr')
 p.spin.cort.map.fdr = p.adjust(p.spin.cort.map, method = 'fdr')
 
 # iii) plotting (main = Fig. 4 and Fig. S9)
+# this code generates a single pdf file with all figures (with order matching Table S4)
+pdf(paste(plot.path,'/mat_index_vs_cort_maps.pdf',sep=''),width=6,height=5)
+par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 1.85, font.main = 1, bg='white')
 for (n in 1:ncort.map) {
   
   # for all maps except AG gene expression, use data from both hemispheres
   if (cort.map.nm[n]!='AG_gene_expr') {
     
-    pdf(paste(plot.path,'/mat_index_vs_cort_map_',cort.map.nm[n],'.pdf',sep=''),width=6,height=5)
-    par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 1.85, font.main = 1, bg='white')
     x = mi.rho[hcp.346.cort]; l = lm(cort.map[,n]~x);
     plot(0, type='n', ylab=cort.map.nm[n], xlab='Maturational Index (MI)', main=rp.main.sp.spin(rho.cort.map[n],p.cort.map.fdr[n],p.spin.cort.map.fdr[n],2), xlim=c(-0.9,0.9), ylim=auto.lim(cort.map[,n]))
     points(mi.rho[hcp.346.cort],cort.map[,n],col='black',pch=19,cex=0.75)
     pred = predict(l,newdata=data.frame('x'=seq(-0.9,0.9,length.out=100)),se.fit=T)
     polygon(c(rev(seq(-0.9,0.9,length.out=100)), seq(-0.9,0.9,length.out=100)), c(rev(pred$fit+2*pred$se.fit), pred$fit-2*pred$se.fit), col = col2alpha('grey',alpha=0.5), border = NA)
     lines(seq(-0.9,0.9,length.out=100),pred$fit,col='black',lwd=3);
-    dev.off()
     
   # for AG gene expression, only use data from left hemisphere
   } else {
     
     lh.ind = which(!is.na(cort.map[,n])) # index of LH regions
-    pdf(paste(plot.path,'/mat_index_vs_cort_map_',cort.map.nm[n],'.pdf',sep=''),width=6,height=5)
-    par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 1.85, font.main = 1, bg='white')
     x = mi.rho[hcp.346.cort][lh.ind]; l = lm(cort.map[,n][lh.ind]~x);
     plot(0, type='n', ylab=cort.map.nm[n], xlab='Maturational Index (MI)', main=rp.main.sp.spin(rho.cort.map[n],p.cort.map.fdr[n],p.spin.cort.map.fdr[n],2), xlim=c(-0.9,0.9), ylim=auto.lim(cort.map[,n][lh.ind]))
     points(mi.rho[hcp.346.cort][lh.ind],cort.map[,n][lh.ind],col='black',pch=19,cex=0.75)
     pred = predict(l,newdata=data.frame('x'=seq(-0.9,0.9,length.out=100)),se.fit=T)
     polygon(c(rev(seq(-0.9,0.9,length.out=100)), seq(-0.9,0.9,length.out=100)), c(rev(pred$fit+2*pred$se.fit), pred$fit-2*pred$se.fit), col = col2alpha('grey',alpha=0.5), border = NA)
     lines(seq(-0.9,0.9,length.out=100),pred$fit,col='black',lwd=3);
-    dev.off()
     
   }
 }
+dev.off()
