@@ -72,7 +72,7 @@ source(paste(code.path,'/dependencies/subc.plot.R',sep=''))         # subcortica
 # ve.id.subc    id's of von economo cytoarchitectonic classes, with subcortex (all 376 regions)
 # yeo.id.subc   id's of yeo networks, with subcortex (all 376 regions)
 
-# Data are available for download from [insert figshare link here]
+# Data are available for download from:  https://doi.org/10.6084/m9.figshare.11551602
 data.path = '~/Desktop' # modify depending on where the data was downloaded to
 
 # Choose analysis stream
